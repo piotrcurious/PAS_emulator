@@ -11,6 +11,7 @@
   - Improved code structure and readability.
 
   - Throttle Input: Analog Pin A0
+  - Wakeup source - digital pin 2 (can be tied to A0 to wakeup by throttle)
   - PAS Signal Output: Digital Pin D8
   - Debug Buzz Output: Digital Pin D9 (optional)
 
