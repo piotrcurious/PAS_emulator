@@ -24,6 +24,7 @@
 
 // --- Pin Configuration ---
 const int THROTTLE_PIN = A0;    // Analog input for the throttle signal wire
+const int WAKEUP_PIN = 2 ; 
 const int PAS_PIN = 8;          // Digital output for the emulated PAS signal
 const int BUZZ_PIN = 9;         // Digital output for debug buzz tone
 
@@ -33,6 +34,8 @@ const int AUDIO_MULTIPLIER = 5; // Factor to convert PAS frequency to audible ra
 const bool DEBUG_MODE = true;   // Enable/disable debug buzz tone
 const unsigned long SERIAL_INTERVAL = 250000; // Serial output interval in microseconds (250ms)
 const unsigned long SLEEP_TIMEOUT = 60000000UL; // Sleep timeout in microseconds (60 seconds)
+//const unsigned long SLEEP_TIMEOUT = 10000000UL; // Sleep timeout in microseconds (60 seconds)
+
 
 // --- Throttle Curve Lookup Table (LUT) ---
 // Define your custom throttle response here.
@@ -43,7 +46,7 @@ const unsigned long SLEEP_TIMEOUT = 60000000UL; // Sleep timeout in microseconds
 const int throttlePoints[] = { 220, 350, 500, 700, 820 };
 
 // Corresponding PAS signal frequency in Hz for each throttle point.
-const int frequencyPoints[] = { 0, 8, 14, 22, 25 };
+const int frequencyPoints[] = { 0, 4, 8, 20, 40 };
 
 // Automatically calculate the number of points in the table.
 const int tableSize = sizeof(throttlePoints) / sizeof(throttlePoints[0]);
@@ -184,15 +187,20 @@ void updateBuzzSignal(unsigned long currentMicros) {
     buzz.lastToggleMicros = currentMicros;
   }
 }
-
 /**
  * @brief Handles periodic serial debug output.
  * @param currentMicros Current microsecond timestamp.
  */
 void updateSerialOutput(unsigned long currentMicros) {
   if (currentMicros - lastSerialOutput >= SERIAL_INTERVAL) {
+    // Calculate voltage from ADC value
+    float voltageValue = throttleValue * (5.0 / 1024.0); // Assuming 5V reference
+
     Serial.print("Throttle ADC: ");
     Serial.print(throttleValue);
+    Serial.print(" (");
+    Serial.print(voltageValue, 2); // Display with 2 decimal places
+    Serial.print("V)");
     Serial.print(" | PAS Freq: ");
     Serial.print(pas.currentFrequency);
     Serial.print(" Hz | Audio Freq: ");
@@ -204,7 +212,6 @@ void updateSerialOutput(unsigned long currentMicros) {
     lastSerialOutput = currentMicros;
   }
 }
-
 /**
  * @brief Processes throttle input and updates system state.
  * @param currentMicros Current microsecond timestamp.
@@ -235,11 +242,11 @@ void processThrottleInput(unsigned long currentMicros) {
  * @brief Configures the throttle pin for digital input with pullup for wake-up detection.
  */
 void setupThrottleForWakeup() {
-  // Convert analog pin A0 to digital pin equivalent
-  pinMode(14, INPUT_PULLUP);  // A0 corresponds to digital pin 14
+  // Convert wakeup pin to digital pin equivalent
+  pinMode(WAKEUP_PIN, INPUT);  // 
   
   // Attach interrupt for wake-up (rising edge detection)
-  attachInterrupt(digitalPinToInterrupt(14), wakeUpISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(WAKEUP_PIN), wakeUpISR, RISING);
 }
 
 /**
@@ -247,7 +254,7 @@ void setupThrottleForWakeup() {
  */
 void restoreThrottleAnalog() {
   // Detach interrupt
-  detachInterrupt(digitalPinToInterrupt(14));
+  detachInterrupt(digitalPinToInterrupt(WAKEUP_PIN));
   
   // Restore analog input functionality
   pinMode(THROTTLE_PIN, INPUT);
