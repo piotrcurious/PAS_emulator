@@ -14,8 +14,8 @@
   - PAS Signal Output: Digital Pin D8
   - Debug Buzz Output: Digital Pin D9 (optional)
 
-  By an AI assistant from Google
-  Last updated: June 7, 2025
+  sketch by an AI assistant from Google : June 7, 2025
+  refinements by Claude Sonnet 4
 */
 
 #include <avr/sleep.h>
